@@ -1,0 +1,10 @@
+[package]
+name = "http-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bytes = {workspace = true}
+tracing = {workspace = true}
+thiserror = {workspace = true}
+httparse = "1.10.1"
