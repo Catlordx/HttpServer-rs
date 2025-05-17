@@ -5,6 +5,9 @@ edition = "2024"
 
 [dependencies]
 bytes = {workspace = true}
-tracing = {workspace = true}
 thiserror = {workspace = true}
-httparse = "1.10.1"
+http = {workspace = true}
+log = {workspace = true}
+async-trait = {workspace = true}
+anyhow = {workspace = true}
+
