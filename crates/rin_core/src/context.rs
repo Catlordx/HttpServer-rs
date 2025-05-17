@@ -1,17 +1,24 @@
-use std::collections::HashMap;
-use std::any::{Any, TypeId}; // 用于存储用户自定义数据
-use crate::request::Request;
+use crate::request::{FormCache, QueryCache, Request};
 use crate::response::Response;
+use std::any::{Any, TypeId}; // 用于存储用户自定义数据
+use std::collections::HashMap;
 // 用于辅助 Any 到 Box<Any> 的转换，如果需要的话
 
 /// 请求处理的上下文。
 /// 包含了请求、响应、路径参数以及用于中间件通信的任意数据。
 #[derive(Debug)]
 pub struct Context {
-    pub request: Request,
-    pub response: Response,
+    request: Request,
+    response: Response,
     // 路径参数，例如 /users/:id 中的 id
-    pub params: HashMap<String, String>,
+    params: HashMap<String, String>,
+    // 当前处理函数的索引，跟踪中间件执行进度
+    index: usize,
+
+    // 用于缓存解析后的查询参数。
+    query_cache: QueryCache,
+    // 用于缓存解析后的表单数据
+    form_cache: FormCache,
     // 用于存储请求范围内的任意数据，供中间件和处理函数之间传递信息
     data: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
     // 内部错误，如果处理过程中发生了错误，可以在这里设置
@@ -27,6 +34,9 @@ impl Context {
             response,
             params: HashMap::new(),
             data: HashMap::new(),
+            index: 0,
+            query_cache: QueryCache::new(),
+            form_cache: FormCache::new(),
             // error: None,
         }
     }
@@ -35,6 +45,21 @@ impl Context {
     pub fn param(&self, name: &str) -> Option<&str> {
         self.params.get(name).map(|s| s.as_str())
     }
+    pub fn query(&self, name: &str) -> Option<&str> {
+        self.query_cache.get(name)
+    }
+    pub fn default_query(&self) -> String {
+        unimplemented!() 
+    }
+    
+    pub fn query_array(&self) -> Vec<String> {
+       unimplemented!() 
+    }
+    pub fn post_form(&self, name: &str) -> Option<&str> {
+        unimplemented!()
+    }
+    
+    
 
     /// 获取请求的 Method。
     pub fn method(&self) -> &http::Method {
@@ -79,13 +104,15 @@ impl Context {
 
     /// 从上下文中获取存储的数据。
     pub fn get<T: Any + Send + Sync + 'static>(&self) -> Option<&T> {
-        self.data.get(&TypeId::of::<T>())
+        self.data
+            .get(&TypeId::of::<T>())
             .and_then(|boxed_value| boxed_value.downcast_ref::<T>())
     }
 
     /// 从上下文中获取存储数据的可变引用。
     pub fn get_mut<T: Any + Send + Sync + 'static>(&mut self) -> Option<&mut T> {
-        self.data.get_mut(&TypeId::of::<T>())
+        self.data
+            .get_mut(&TypeId::of::<T>())
             .and_then(|boxed_value| boxed_value.downcast_mut::<T>())
     }
 

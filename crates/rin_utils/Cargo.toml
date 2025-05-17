@@ -4,4 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-log = {workspace = true}
+rin_core = { path = "../rin_core" }
+
+log = { workspace = true }
+bytes = { workspace = true }
+async-trait = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = { workspace = true }
+tokio = { version = "1.45.0", features = ["io-util", "macros"] }
+
+
